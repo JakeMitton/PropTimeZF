@@ -6,6 +6,7 @@ Description: An algorithm to compute the propagation time of
              Zero Forcing Sets for a given graph
 """
 import sys
+
 from typing import Optional
 
 
@@ -18,7 +19,11 @@ class _Vertex:
         self.n_coloured = 0
 
     def add_adjacent(self, vertex) -> None:
-        self.adjacent.append(vertex)
+        if vertex is not None:
+            self.adjacent.append(vertex)
+            print("Adjacency added from", self.tag, "to", vertex.tag)
+        else:
+            print("WHAT", vertex)
 
     def set_colour(self, setting: bool) -> None:
         self.is_coloured = setting
@@ -36,15 +41,34 @@ class Graph:
         return None
 
     def build_graph(self, file: str) -> None:
+        """
+        Parses an input file to create the vertices and add the edges of a graph.
+        For details on input file format, see README.md
+        :param file: .txt file. Format specified in README.md
+        :return: None
+        """
         try:
             f = open(file, 'r')
         except FileNotFoundError:
             print("Invalid\n")
             print("Error: File Not Found")
         else:
-            # TODO: Read in the file input to turn adjacency matrix into graph class
+            input = list(f)
+            input = [line.split() for line in input]
+            input = [line for line in input]
+            input[0] = input[0][1:]
+            for tag in input[0]:
+                self.add_vertex(tag)
+
+            for line in input:
+                if line[0] != '$':
+                    source = self._find_vertex(line[0])
+                    for each in range(len(line)):
+                        if line[each] == '1':
+                            source.add_adjacent(self._find_vertex(input[0][each-1]))
+
+            # TODO: Read in the adjacent vertices from the file and use these to create edges
             f.close()
-            pass
 
     def add_vertex(self, tag: str, is_coloured: bool = False) -> None:
         vertex = _Vertex(tag, is_coloured)
@@ -87,14 +111,8 @@ if __name__ == "__main__":
     file = sys.argv[1]
     graph.build_graph(file)
 
-    # graph.add_vertex("One")
-    # graph.add_vertex("Two")
-    # graph.add_vertex("Three")
-    # graph.add_edge("One", "Two")
-    # graph.add_edge("One", "Three")
-
-    # for each in graph.vertices.keys():
-    #     print("Vertex:", each.tag)
-    #     if len(each.adjacent) > 0:
-    #         for node in each.adjacent:
-    #             print("\t", each.tag, "--> ", node.tag)
+    for each in graph.vertices.keys():
+        print("Vertex:", each.tag)
+        if len(each.adjacent) > 0:
+            for node in each.adjacent:
+                print("\t", each.tag, "--> ", node.tag)
