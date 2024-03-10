@@ -6,7 +6,8 @@ Description: An algorithm to compute the propagation time of
              Zero Forcing Sets for a given graph
 """
 import sys
-from typing import Optional
+import networkx as nx
+import matplotlib.pyplot as plt
 
 
 class Graph:
@@ -57,12 +58,71 @@ class Graph:
             print("****************************************")
             f.close()
 
-        def set_ZF_set(self, ZF_set: list) -> None:
-            
-            pass
+    def get_ZF_set(self) -> list:
+        print("Please enter the vertices in the Zero Forcing Set on a single line, seperated by spaces.")
+        print("Close the graph image to proceed.")
+        printGraph(self)
+        ZF_set_str = input("Zero Forcing Set: ")
+        ZF_set = list(ZF_set_str.split())
+        ZF_set = [int(item) for item in ZF_set]
+        return ZF_set
+
+    def set_ZF_set(self) -> bool:
+        ZF_set = self.get_ZF_set()
+        for each in ZF_set:
+            if each <= len(self.colour):
+                self.colour[each] = 1
+                self.colour_prime[each] = 1
+            else:
+                print(each, " is not a vertex in the graph. Please try again.")
+                return False
+        return True
+
+    def find_prop_time(self) -> int:
+        # TODO: Comment this function better / add docstring
+        propagation_time = 0
+        blank_neighbours = []
+        updated_flag = True
+        while updated_flag:
+            updated_flag = False
+            coloured_flag = True
+            for each in self.colour:
+                if each == 0:
+                    coloured_flag = False
+            if coloured_flag:
+                return propagation_time
+            for s in range(0, len(self.adjacency_list)):
+                # If a vertex is coloured then we look at each of its adjacent vertices
+                if self.colour[s] == 1:
+                    for a in self.adjacency_list[s]:
+                        # If the adjacent vertex is uncoloured then add it to blank_neighbours
+                        if self.colour[int(a)] == 0:
+                            blank_neighbours.append(int(a))
+                if len(blank_neighbours) == 1:
+                    self.colour_prime[int(blank_neighbours[0])] = 1
+                    blank_neighbours.clear()
+                    updated_flag = True
+            for vertex in range(0, len(self.colour_prime)):
+                self.colour[vertex] = self.colour_prime[vertex]
+            propagation_time += 1
+        return propagation_time
+
+
+def printGraph(graph: Graph) -> None:
+    G = nx.Graph()
+    for each in range(0, len(graph.adjacency_list)):
+        G.add_node(each)
+        G.add_edge(each, int(graph.adjacency_list[each][0]))
+        for adj in graph.adjacency_list[each]:
+            G.add_edge(each, int(adj))
+    nx.draw_circular(G, with_labels=True, node_color='#ABAEB0', node_size=500)
+    plt.show()
 
 
 if __name__ == "__main__":
     graph = Graph()
     file = sys.argv[1]
     graph.build_adjacency_list(file)
+    graph.set_ZF_set()
+    print("Colour =", graph.colour)
+    print("The propagation time is:", graph.find_prop_time())
